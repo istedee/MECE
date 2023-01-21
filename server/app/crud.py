@@ -1,3 +1,4 @@
+# create, read, update and delete
 from sqlalchemy.orm import Session
 from utility import generate_token, generate_timestamp
 import models, schemas
