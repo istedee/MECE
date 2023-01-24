@@ -10,6 +10,9 @@ Run command:
 $ docker-compose up --build
 ```
 
+You can see the docs at: 
+http://127.0.0.1:8000/docs
+
 ### Manual deployment
 
 Start the server by:
