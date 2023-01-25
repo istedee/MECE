@@ -1,27 +1,30 @@
 import uvicorn
 
 from fastapi import FastAPI
-from routes import messages, users
 
 import models
-from db import engine
-
-models.Base.metadata.create_all(bind=engine)
+from db import engine, SessionLocal
 
 app = FastAPI()
 
+# Init db if not existing
+# Database connection function for use in routers
+# And accross the REST API
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+models.Base.metadata.create_all(bind=engine)
+
+from routes import messages, users, healthcheck
 
 app.include_router(messages.router)
 app.include_router(users.router)
-
-
-@app.get(
-    "/ping",
-    tags=["health-check"],
-    responses={200: {"description": "Returns 'pong' as status check msg"}},
-)
-async def root():
-    return {"message": "pong"}
+app.include_router(healthcheck.router)
 
 
 if __name__ == "__main__":
