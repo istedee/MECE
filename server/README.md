@@ -10,7 +10,7 @@ Run command:
 $ docker-compose up --build
 ```
 
-You can see the docs at: 
+You can see the docs at:
 http://127.0.0.1:8000/docs
 
 ### Manual deployment
@@ -25,3 +25,14 @@ Running the manual command will cause the FastAPI server to create/use database 
 
 This does not cause any issues, but some data might not be present during development if multiple locations are used. So, in order to use constant environment, using Docker compose is encouraged.
 
+### Testing
+
+You can manually test the application with Pytest
+
+Run command:
+
+```bash
+$ python3 -m pytest
+```
+
+From the app folder to execute tests.
