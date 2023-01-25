@@ -9,7 +9,6 @@ from sqlalchemy.orm import sessionmaker
 
 from main import app, get_db
 from db import Base
-from crud import create_user
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
