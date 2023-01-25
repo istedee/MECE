@@ -1,34 +1,52 @@
 # Testing of database with temp
 # https://fastapi.tiangolo.com/advanced/testing-database/
 
-
+from fastapi.testclient import TestClient
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from fastapi.testclient import TestClient
 
-from app.main import app, get_db
+
+from main import app, get_db
+from db import Base
+from crud import create_user
+
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
 )
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base.metadata.drop_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
 
-@pytest.fixture(scope="session")
 def override_get_db():
-    db = TestSessionLocal()
     try:
+        db = TestingSessionLocal()
         yield db
     finally:
         db.close()
 
 
-@pytest.fixture(scope="function")
-def test_app(override_get_db):
-    app.dependency_overrides[get_db] = lambda: override_get_db
+app.dependency_overrides[get_db] = override_get_db
+
+
+@pytest.fixture()
+def client():
+    """Getting testclient of app"""
     with TestClient(app) as client:
         yield client
+
+
+# client = TestClient(app)
+
+
+# def test_create_user(client):
+#     response = client.post(
+#         "/users/register/",
+#         json={"username": "Bob", "password": "chimichangas4life"},
+#     )
+#     assert response.status_code == 200, response.text
