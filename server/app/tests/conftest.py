@@ -35,17 +35,6 @@ app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture()
 def client():
-    """Getting testclient of app"""
+    """Yield test client for tests"""
     with TestClient(app) as client:
         yield client
-
-
-# client = TestClient(app)
-
-
-# def test_create_user(client):
-#     response = client.post(
-#         "/users/register/",
-#         json={"username": "Bob", "password": "chimichangas4life"},
-#     )
-#     assert response.status_code == 200, response.text
