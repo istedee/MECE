@@ -1,5 +1,6 @@
 import secrets, datetime
-from db import SessionLocal
+
+# from db import SessionLocal
 
 
 def generate_token() -> str:
@@ -13,9 +14,9 @@ def generate_timestamp() -> str:
 # Init db if not existing
 # Database connection function for use in routers
 # And accross the REST API
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# def get_db():
+#     db = SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
