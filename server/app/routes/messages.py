@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 import crud, schemas
-from utility import get_db
+
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -9,6 +9,8 @@ router = APIRouter(
     tags=["messages"],
     responses={403: {"description": "Invalid credentials"}},
 )
+
+from main import get_db
 
 
 @router.post("/post/", status_code=200, description="Saves message to database")
