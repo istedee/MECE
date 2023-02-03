@@ -20,11 +20,12 @@ def get_db():
 
 models.Base.metadata.create_all(bind=engine)
 
-from routes import messages, users, healthcheck
+from routes import messages, users, healthcheck, chatrooms
 
 app.include_router(messages.router)
 app.include_router(users.router)
 app.include_router(healthcheck.router)
+app.include_router(chatrooms.router)
 
 
 if __name__ == "__main__":
