@@ -22,11 +22,11 @@ from main import get_db
 def post_message(message: dict):
     def serializer(messages):
         return json.dumps(messages).encode('utf-8')
-    # producer = KafkaProducer(
-    # bootstrap_servers=['localhost:9092'],
-    # value_serializer=serializer
-    # )
-    # producer.send('messages', message)
+    producer = KafkaProducer(
+    bootstrap_servers=['localhost:9092'],
+    value_serializer=serializer
+    )
+    producer.send('messages', message)
 
 @router.post("/create/", status_code=200, description="Create a chatroom")
 def create_chatroom(chatroom: schemas.ChatRoomCreate, db: Session = Depends(get_db)):
