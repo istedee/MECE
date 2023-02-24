@@ -1,6 +1,9 @@
+import json
 from fastapi import APIRouter, Depends, HTTPException
 
-import crud, schemas
+import crud, schemas, requests
+
+from kafka import KafkaProducer
 
 from sqlalchemy.orm import Session
 
@@ -15,6 +18,21 @@ router = APIRouter(
 
 from main import get_db
 
+@router.post("/post/", status_code=200, description="Post chatroom messages")
+def post_message(message: schemas.MessageGet):
+    def serializer(messages):
+        return json.loads(messages).encode('utf-8')
+    producer = KafkaProducer(
+    bootstrap_servers=['localhost:9092'],
+    value_serializer=serializer
+    )
+    print(type(message))
+    print(message)
+    new_msg = {}
+    for entry, value in message.items():
+        print(entry)
+        new_msg[entry] = value
+    producer.send('messages', new_msg)
 
 @router.post("/create/", status_code=200, description="Create a chatroom")
 def create_chatroom(chatroom: schemas.ChatRoomCreate, db: Session = Depends(get_db)):
