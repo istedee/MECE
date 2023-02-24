@@ -19,10 +19,9 @@ app = FastAPI()
 @app.on_event("startup")
 async def startup_event():
     #wait for Kafka broker to be ready
-    time.sleep(60)
+    time.sleep(1)
     # Kafka Admin Client
     client = KafkaAdminClient(
-        api_version=(0,11,5),
         bootstrap_servers=os.environ.get("BOOTSTRAP-SERVERS"))
     # Creating topic
     topic = NewTopic(name=os.environ.get("TOPIC_MESSAGES_BASIC_NAME"),
