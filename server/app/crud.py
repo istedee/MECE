@@ -66,12 +66,13 @@ def create_admin(db: Session, api_token: str, username: str):
         db.refresh(promoted_user)
 
 
-def create_user_message(db: Session, text: str, api_token: str):
+def create_user_message(db: Session, text: str, api_token: str, chat_uuid: str):
     # Fetch User from database using API token (unique)
     user = verify_user(db, api_token)
     time = generate_timestamp()
-    if user:
-        db_item = models.Message(message=text, owner_id=user.id, timestamp=time)
+    chat = get_chatroom_uuid(db, chat_uuid)
+    if user and chat:
+        db_item = models.Message(message=text, owner_id=user.id, timestamp=time, chatroom_uuid=chat_uuid)
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
