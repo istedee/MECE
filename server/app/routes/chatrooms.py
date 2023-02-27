@@ -1,6 +1,4 @@
-import json
 from fastapi import APIRouter, Depends, HTTPException
-import os
 import crud, schemas
 
 from sqlalchemy.orm import Session
@@ -17,9 +15,26 @@ router = APIRouter(
 from main import get_db, producer
 
 @router.post("/post/", status_code=200, description="Post chatroom messages")
-def post_message(message: dict):
-    print(message)
-    producer.send('messages', message)
+def post_message(message: schemas.MessageCreate, db: Session = Depends(get_db)):
+    if not crud.get_chatroom_uuid(db, message.room_uuid):
+        return HTTPException(
+            status_code=404, detail=f"Chatroom with UUID {message.room_uuid} not found!",
+            headers="Not found"
+        )
+    if not crud.verify_user_in_chatroom(db, message.room_uuid, message.api_token):
+        return HTTPException(
+            status_code=409, detail=f"You are not a member of this community",
+            headers="Not a member"
+        )
+    db_user = crud.create_user_message(
+        db, text=message.message, api_token=message.api_token, chat_uuid=message.room_uuid
+    )
+    if db_user:
+        print(message)
+        producer.send(message.room_uuid, message.message)
+        return {"status": "ok"}
+    else:
+        raise HTTPException(status_code=403, detail="API token not valid!")
 
 @router.post("/create/", status_code=200, description="Create a chatroom")
 def create_chatroom(chatroom: schemas.ChatRoomCreate, db: Session = Depends(get_db)):
@@ -32,7 +47,7 @@ def create_chatroom(chatroom: schemas.ChatRoomCreate, db: Session = Depends(get_
         )
     chat = crud.create_chatroom(db, api_token=chatroom.api_token, name=chatroom.name)
     if chat:
-        return {"name": chat.name, "link": chat.uuid}
+        return {"name": chat.name, "uuid": chat.uuid}
     else:
         raise HTTPException(status_code=403, detail="API token not valid!")
 
@@ -44,10 +59,10 @@ def join_chatroom_by_link(
     if not crud.verify_user(db, chatroom.api_token):
         raise HTTPException(status_code=403, detail="API token not valid!")
     userid = crud.get_id_from_token(db, chatroom.api_token)
-    chatid = crud.get_chatroom_uuid(db, chatroom.uuid)
+    chatid = crud.get_chatroom_uuid(db, chatroom.room_uuid)
     if not chatid:
         raise HTTPException(
-            status_code=404, detail=f"Chatroom with name {chatroom.uuid} not found!"
+            status_code=404, detail=f"Chatroom with name {chatroom.room_uuid} not found!"
         )
     join = crud.join_chatroom(db, userid.id, chatid.id)
     if join:
@@ -68,15 +83,15 @@ def leave_chatroom_by_link(
     if not crud.verify_user(db, chatroom.api_token):
         raise HTTPException(status_code=403, detail="API token not valid!")
     userid = crud.get_id_from_token(db, chatroom.api_token)
-    chatid = crud.get_chatroom_uuid(db, chatroom.uuid)
+    chatid = crud.get_chatroom_uuid(db, chatroom.room_uuid)
     if not chatid:
         raise HTTPException(
-            status_code=404, detail=f"Chatroom with name {chatroom.uuid} not found!"
+            status_code=404, detail=f"Chatroom with uuid {chatroom.uuid} not found!"
         )
     leave = crud.leave_chatroom(db, userid.id, chatid.id)
     if leave:
-        return leave
+        return {"status": "ok", "info": "Succesfully left chatroom"}
     else:
         raise HTTPException(
-            status_code=409, detail=f"You are not member of this chatroom!"
+            status_code=409, detail="You are not member of this chatroom!"
         )

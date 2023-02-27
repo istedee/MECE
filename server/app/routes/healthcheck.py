@@ -2,7 +2,6 @@ from fastapi import APIRouter
 
 
 router = APIRouter(
-    tags=["messages"],
     responses={403: {"description": "Invalid credentials"}},
 )
 

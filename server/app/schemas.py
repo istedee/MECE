@@ -6,11 +6,11 @@ from pydantic import BaseModel
 
 class MessageBase(BaseModel):
     message: str
-    api_token: str
 
 
 class MessageCreate(MessageBase):
-    pass
+    api_token: str
+    room_uuid: str
 
 
 class Message(MessageBase):
@@ -48,7 +48,7 @@ class ChatRoomCreate(ChatroomBase):
 
 
 class ChatRoomJoinUUID(BaseModel):
-    uuid: str
+    room_uuid: str
     api_token: str
 
 class MessageBase(BaseModel):
