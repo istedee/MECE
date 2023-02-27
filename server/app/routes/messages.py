@@ -7,7 +7,10 @@ from sqlalchemy.orm import Session
 router = APIRouter(
     prefix="/messages",
     tags=["messages"],
-    responses={403: {"description": "Invalid credentials"}},
+    responses={
+        403: {"description": "Invalid credentials"},
+        200: {"description": "Request OK"},
+    },
 )
 
 from main import get_db
