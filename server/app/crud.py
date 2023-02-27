@@ -91,6 +91,16 @@ def get_chatroom_uuid(db: Session, chatroom_id: str):
         db.query(models.ChatRoom.id).filter(models.ChatRoom.uuid == chatroom_id).first()
     )
 
+def verify_user_in_chatroom(db: Session, chatroom_uuid: str, api_token: str):
+    """Verify that the user belongs to the chatroom by api_token"""
+    user = verify_user(db, api_token)
+    chatroom = get_chatroom_uuid(db, chatroom_uuid)
+    return (
+        db.query(models.Membership)
+        .filter(models.Membership.member_id == user.id)
+        .filter(models.Membership.chatroom_id == chatroom.id)
+        .first()
+    )
 
 def create_chatroom(db: Session, api_token: str, name: str):
     """Create a new chatroom"""
@@ -150,4 +160,5 @@ def leave_chatroom(db: Session, member_id: int, chatroom_id: int):
             .filter(models.Membership.chatroom_id == chatroom_id)
             .delete()
         )
-        return leave
+        db.commit()
+        return True
