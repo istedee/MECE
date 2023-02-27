@@ -1,9 +1,11 @@
+import json
 import uvicorn
 import time
 import os
 from dotenv import load_dotenv
 
 from fastapi import FastAPI
+from kafka import KafkaProducer
 
 import models
 from db import engine, SessionLocal
@@ -22,6 +24,13 @@ def get_db():
     finally:
         db.close()
 
+def serializer(messages):
+    return json.dumps(messages).encode('utf-8')
+
+producer = KafkaProducer(
+    bootstrap_servers=["localhost:9092"],
+    value_serializer=serializer
+    )
 
 models.Base.metadata.create_all(bind=engine)
 
