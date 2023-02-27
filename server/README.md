@@ -51,5 +51,9 @@ $ ./test-with-coverage.sh
 
 or
 
+```bash
+$ python3 -m pytest --cov=. --cov-report term-missing tests/
+```
+
 This will output the test results as collection.
 Run above command from the app directory as well.
