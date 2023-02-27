@@ -32,6 +32,12 @@ You can manually test the application with Pytest
 Run command:
 
 ```bash
+$ ./test.sh
+```
+
+or
+
+```bash
 $ python3 -m pytest
 ```
 
@@ -40,8 +46,10 @@ From the app folder to execute tests.
 To get coverage of test use command:
 
 ```bash
-$ python3 -m pytest --cov=. --cov-report term-missing tests/
+$ ./test-with-coverage.sh
 ```
+
+or
 
 This will output the test results as collection.
 Run above command from the app directory as well.
