@@ -3,8 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException
 import os
 import crud, schemas
 
-from kafka import KafkaProducer
-
 from sqlalchemy.orm import Session
 
 router = APIRouter(
@@ -16,16 +14,10 @@ router = APIRouter(
     },
 )
 
-from main import get_db
+from main import get_db, producer
 
 @router.post("/post/", status_code=200, description="Post chatroom messages")
 def post_message(message: dict):
-    def serializer(messages):
-        return json.dumps(messages).encode('utf-8')
-    producer = KafkaProducer(
-        bootstrap_servers=["localhost:9092"],
-        value_serializer=serializer
-        )
     print(message)
     producer.send('messages', message)
 
