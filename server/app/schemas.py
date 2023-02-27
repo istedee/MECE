@@ -34,3 +34,30 @@ class User(UserBase):
 
     class Config:
         orm_mode = True
+
+
+class ChatroomBase(BaseModel):
+    name: str
+
+    class Config:
+        orm_mode = True
+
+
+class ChatRoomCreate(ChatroomBase):
+    api_token: str
+
+
+class ChatRoomJoinUUID(BaseModel):
+    uuid: str
+    api_token: str
+
+class MessageBase(BaseModel):
+    user_id: int
+    recipient_id: int
+    message: str
+
+    class Config:
+        orm_mode = True
+
+class MessageGet(MessageBase):
+    pass
