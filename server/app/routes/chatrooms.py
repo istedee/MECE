@@ -1,6 +1,4 @@
-import json
 from fastapi import APIRouter, Depends, HTTPException
-import os
 import crud, schemas
 
 from sqlalchemy.orm import Session
@@ -17,9 +15,21 @@ router = APIRouter(
 from main import get_db, producer
 
 @router.post("/post/", status_code=200, description="Post chatroom messages")
-def post_message(message: dict):
-    print(message)
-    producer.send('messages', message)
+def post_message(message: schemas.MessageCreate, db: Session = Depends(get_db)):
+    if not crud.get_chatroom_uuid(db, message.room_uuid):
+        return HTTPException(
+            status_code=404, detail=f"Chatroom with UUID {message.room_uuid} not found!",
+            headers="Not found"
+        )
+    db_user = crud.create_user_message(
+        db, text=message.message, api_token=message.api_token, chat_uuid=message.room_uuid
+    )
+    if db_user:
+        print(message)
+        producer.send(message.room_uuid, message.message)
+        return {"status": "ok"}
+    else:
+        raise HTTPException(status_code=403, detail="API token not valid!")
 
 @router.post("/create/", status_code=200, description="Create a chatroom")
 def create_chatroom(chatroom: schemas.ChatRoomCreate, db: Session = Depends(get_db)):
@@ -32,7 +42,7 @@ def create_chatroom(chatroom: schemas.ChatRoomCreate, db: Session = Depends(get_
         )
     chat = crud.create_chatroom(db, api_token=chatroom.api_token, name=chatroom.name)
     if chat:
-        return {"name": chat.name, "link": chat.uuid}
+        return {"name": chat.name, "uuid": chat.uuid}
     else:
         raise HTTPException(status_code=403, detail="API token not valid!")
 
