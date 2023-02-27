@@ -1,6 +1,6 @@
 import json
 from fastapi import APIRouter, Depends, HTTPException
-
+import os
 import crud, schemas
 
 from kafka import KafkaProducer
@@ -23,9 +23,10 @@ def post_message(message: dict):
     def serializer(messages):
         return json.dumps(messages).encode('utf-8')
     producer = KafkaProducer(
-    bootstrap_servers=['localhost:9092'],
-    value_serializer=serializer
-    )
+        bootstrap_servers=["localhost:9092"],
+        value_serializer=serializer
+        )
+    print(message)
     producer.send('messages', message)
 
 @router.post("/create/", status_code=200, description="Create a chatroom")
