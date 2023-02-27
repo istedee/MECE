@@ -48,7 +48,7 @@ class ChatRoomCreate(ChatroomBase):
 
 
 class ChatRoomJoinUUID(BaseModel):
-    uuid: str
+    room_uuid: str
     api_token: str
 
 class MessageBase(BaseModel):
