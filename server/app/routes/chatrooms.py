@@ -21,6 +21,11 @@ def post_message(message: schemas.MessageCreate, db: Session = Depends(get_db)):
             status_code=404, detail=f"Chatroom with UUID {message.room_uuid} not found!",
             headers="Not found"
         )
+    if not crud.verify_user_in_chatroom(db, message.room_uuid, message.api_token):
+        return HTTPException(
+            status_code=409, detail=f"You are not a member of this community",
+            headers="Not a member"
+        )
     db_user = crud.create_user_message(
         db, text=message.message, api_token=message.api_token, chat_uuid=message.room_uuid
     )
@@ -54,10 +59,10 @@ def join_chatroom_by_link(
     if not crud.verify_user(db, chatroom.api_token):
         raise HTTPException(status_code=403, detail="API token not valid!")
     userid = crud.get_id_from_token(db, chatroom.api_token)
-    chatid = crud.get_chatroom_uuid(db, chatroom.uuid)
+    chatid = crud.get_chatroom_uuid(db, chatroom.room_uuid)
     if not chatid:
         raise HTTPException(
-            status_code=404, detail=f"Chatroom with name {chatroom.uuid} not found!"
+            status_code=404, detail=f"Chatroom with name {chatroom.room_uuid} not found!"
         )
     join = crud.join_chatroom(db, userid.id, chatid.id)
     if join:
@@ -78,15 +83,15 @@ def leave_chatroom_by_link(
     if not crud.verify_user(db, chatroom.api_token):
         raise HTTPException(status_code=403, detail="API token not valid!")
     userid = crud.get_id_from_token(db, chatroom.api_token)
-    chatid = crud.get_chatroom_uuid(db, chatroom.uuid)
+    chatid = crud.get_chatroom_uuid(db, chatroom.room_uuid)
     if not chatid:
         raise HTTPException(
-            status_code=404, detail=f"Chatroom with name {chatroom.uuid} not found!"
+            status_code=404, detail=f"Chatroom with uuid {chatroom.uuid} not found!"
         )
     leave = crud.leave_chatroom(db, userid.id, chatid.id)
     if leave:
-        return leave
+        return {"status": "ok", "info": "Succesfully left chatroom"}
     else:
         raise HTTPException(
-            status_code=409, detail=f"You are not member of this chatroom!"
+            status_code=409, detail="You are not member of this chatroom!"
         )
