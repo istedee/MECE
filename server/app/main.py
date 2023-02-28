@@ -27,7 +27,15 @@ def get_db():
 def serializer(messages):
     return json.dumps(messages).encode('utf-8')
 
-producer = KafkaProducer(
+if os.environ.get("BOOTSTRAP-SERVERS"):
+    producer = KafkaProducer(
+    bootstrap_servers=os.environ.get("BOOTSTRAP-SERVERS"),
+    value_serializer=serializer
+    )
+else:
+    print("Environment variable for Kafka not found")
+    print("Use localhost as default")
+    producer = KafkaProducer(
     bootstrap_servers=["localhost:9092"],
     value_serializer=serializer
     )
