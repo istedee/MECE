@@ -1,10 +1,9 @@
 FROM python:3.8-slim-buster
-RUN cat requirements.txt
 
-WORKDIR /code
+#WORKDIR /code
 
 
-COPY requirements.txt .
+COPY requirements.txt /requirements.txt
 
 
 RUN pip install -r requirements.txt
