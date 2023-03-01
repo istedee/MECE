@@ -4,7 +4,7 @@ RUN cat requirements.txt
 WORKDIR /code
 
 
-COPY requirements.txt 
+COPY requirements.txt .
 
 
 RUN pip install -r requirements.txt
