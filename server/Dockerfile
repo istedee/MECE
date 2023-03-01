@@ -2,6 +2,10 @@ FROM python:3.8-slim-buster
 
 WORKDIR /code
 
+RUN ls
+
+RUN pwd
+
 COPY requirements.txt .
 
 
