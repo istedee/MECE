@@ -10,9 +10,9 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    api_token = Column(String)
+    username = Column(String(32), unique=True, index=True)
+    hashed_password = Column(String(256))
+    api_token = Column(String(64))
     is_admin = Column(Boolean, default=False)
 
     messages = relationship("Message", back_populates="owner")
@@ -25,10 +25,10 @@ class Message(Base):
     __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True, index=True)
-    message = Column(String)
+    message = Column(String(2048))
     owner_id = Column(Integer, ForeignKey("users.id"))
-    chatroom_uuid = Column(String, ForeignKey("chatrooms.uuid"))
-    timestamp = Column(String)
+    chatroom_uuid = Column(String(32), ForeignKey("chatrooms.uuid"))
+    timestamp = Column(String(64))
 
     owner = relationship("User", back_populates="messages")
     room = relationship("ChatRoom", back_populates="chatrooms")
@@ -42,7 +42,7 @@ class Membership(Base):
     id = Column(Integer, primary_key=True, index=True)
     member_id = Column(Integer, ForeignKey("users.id"))
     chatroom_id = Column(Integer, ForeignKey("chatrooms.id"))
-    public_key = Column(String, nullable=True)
+    public_key = Column(String(2048), nullable=True)
 
     member = relationship("User", back_populates="memberships")
     chatroom = relationship("ChatRoom", back_populates="members")
@@ -54,8 +54,8 @@ class ChatRoom(Base):
     __tablename__ = "chatrooms"
 
     id = Column(Integer, primary_key=True, index=True)
-    uuid = Column(String, unique=True, index=True)
-    name = Column(String, unique=True)
+    uuid = Column(String(64), unique=True, index=True)
+    name = Column(String(32), unique=True)
 
     chatrooms = relationship("Message", back_populates="room")
     members = relationship("Membership", back_populates="chatroom")
