@@ -43,6 +43,14 @@ services:
     environment:
           - KAFKA_HOST=kafka
           - KAFKA_PORT=9092
+          - REDIS_HOST=cache
+          - REDIS_PORT=6379
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
   # zookeeper:
   #   image: wurstmeister/zookeeper
   #   container_name: zookeeper
