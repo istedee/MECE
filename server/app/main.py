@@ -1,7 +1,7 @@
 import json
 import uvicorn
-import time
 import os
+import redis
 from dotenv import load_dotenv
 
 from fastapi import FastAPI
@@ -28,17 +28,21 @@ def serializer(messages):
     return json.dumps(messages).encode('utf-8')
 
 if os.environ.get("BOOTSTRAP-SERVERS"):
-    producer = KafkaProducer(
-    bootstrap_servers=os.environ.get("BOOTSTRAP-SERVERS"),
-    value_serializer=serializer
-    )
+    print("Found bootstrap server env variable")
+    # producer = KafkaProducer(
+    # bootstrap_servers=os.environ.get("BOOTSTRAP-SERVERS"),
+    # value_serializer=serializer
+    # )
 else:
     print("Environment variable for Kafka not found")
     print("Use localhost as default")
-    producer = KafkaProducer(
-    bootstrap_servers=["localhost:9092"],
-    value_serializer=serializer
-    )
+    # producer = KafkaProducer(
+    # bootstrap_servers=["localhost:9092"],
+    # value_serializer=serializer
+    # )
+
+# Redis config:
+redis_client = redis.Redis(host=os.environ.get("REDIS_HOST"), port=os.environ.get("REDIS_PORT"))
 
 models.Base.metadata.create_all(bind=engine)
 
