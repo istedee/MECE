@@ -3,7 +3,7 @@ import curses
 from curses.textpad import Textbox, rectangle
 import threading
 import time
-
+import client_chat
 
 def receive_message():
     pass
@@ -28,7 +28,7 @@ def chat_room(stdscr):
         k = stdscr.getch()
 
 
-def chat_join(stdscr, text):
+def chat_join(stdscr):
     stdscr.clear()
     h, w = stdscr.getmaxyx()
     x = w//2
@@ -81,17 +81,11 @@ def print_menu(stdscr, selected_row_idx):
     stdscr.refresh()
 
 def chatmenu(stdscr, user):
-    # turn off cursor blinking
     curses.curs_set(0)
-    
-
-    # color scheme for selected row
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
-    # specify the current selected row
     current_row = 0
 
-    # print the menu
     print_menu(stdscr, current_row)
 
     while 1:
@@ -104,7 +98,7 @@ def chatmenu(stdscr, user):
             current_row += 1
         elif key == curses.KEY_ENTER or key in [10, 13]:
             if current_row == 0:
-                chat_join(stdscr, "asd")
+                chat_join(stdscr)
             if current_row == 1:
                 crete_chat_room(stdscr)
             stdscr.getch()
@@ -114,7 +108,11 @@ def chatmenu(stdscr, user):
 
         print_menu(stdscr, current_row)
 
+
+
+
 def draw_login(stdscr):
+    chat = client_chat.ClientChat()
     k = 0
     cursor_x = 0
     cursor_y = 0
@@ -151,19 +149,10 @@ def draw_login(stdscr):
         cursor_y = max(0, cursor_y)
         cursor_y = min(height-1, cursor_y)
 
-        # Declaration of strings
-        title = "Curses example"[:width-1]
-        subtitle = "Written by Clay McLeod"[:width-1]
         keystr = "Last key pressed: {}".format(k)[:width-1]
         statusbarstr = "Press 'q' to exit | STATUS BAR | Pos: {}, {}".format(cursor_x, cursor_y)
         if k == 0:
             keystr = "No key press detected..."[:width-1]
-
-        # Centering calculations
-        start_x_title = int((width // 2) - (len(title) // 2) - len(title) % 2)
-        start_x_subtitle = int((width // 2) - (len(subtitle) // 2) - len(subtitle) % 2)
-        start_x_keystr = int((width // 2) - (len(keystr) // 2) - len(keystr) % 2)
-        start_y = int((height // 2) - 2)
 
         # Rendering some text
         whstr = "Width: {}, Height: {}".format(width, height)
@@ -179,19 +168,14 @@ def draw_login(stdscr):
         stdscr.attron(curses.color_pair(2))
         stdscr.attron(curses.A_BOLD)
 
-        # Rendering title
-        stdscr.addstr(start_y, start_x_title, title)
-
         # Turning off attributes for title
         stdscr.attroff(curses.color_pair(2))
         stdscr.attroff(curses.A_BOLD)
 
-        # Print rest of text
-        stdscr.addstr(start_y + 1, start_x_subtitle, subtitle)
-        stdscr.addstr(start_y + 3, (width // 2) - 2, '-' * 4)
-        stdscr.addstr(start_y + 5, start_x_keystr, keystr)
         stdscr.move(cursor_y, cursor_x)
 
+
+        stdscr.addstr(1, 10, "Log in")
         stdscr.addstr(2, 10, "Username")
         editwin = curses.newwin(1,30, 4,1)
         box = Textbox(editwin)
@@ -202,18 +186,36 @@ def draw_login(stdscr):
         box2 = Textbox(editwin2)
         rectangle(stdscr, 7,0,9,32)
 
+        stdscr.addstr(11, 13, "Or")
+        stdscr.addstr(12, 8, "Register a user")
+        stdscr.addstr(14, 10, "Username")
+        editwin = curses.newwin(1,30, 16,1)
+        box3 = Textbox(editwin)
+        rectangle(stdscr, 15,0, 1+15+1, 1+30+1)
+
+        stdscr.addstr(18, 10, "Password")
+        editwin2 = curses.newwin(1,30, 20,1)
+        box4 = Textbox(editwin2)
+        rectangle(stdscr, 19,0,21,32)
+
 
         # Refresh the screen
         stdscr.refresh()
         
         box.edit()
         box2.edit()
+        box3.edit()
+        box4.edit()
         user = box.gather()
         passw = box2.gather()
+        register_username = box3.gather()
+        register_passw = box4.gather()
 
         # Wait for next input
         k = stdscr.getch()
         if k == curses.KEY_ENTER or k in [10, 13]:
+            if register_username != "" and register_passw != "":
+                chat.register_user(register_username, register_passw)
             chatmenu(stdscr, user)
             stdscr.getch()
 
