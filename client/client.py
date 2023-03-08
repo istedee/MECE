@@ -3,7 +3,7 @@ import client_ui
 
 
 def main():
-    client_ui.main
+    client_ui.main()
 
 if '__main__' == __name__:
     try:
