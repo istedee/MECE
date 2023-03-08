@@ -29,6 +29,6 @@ def check_user_apitoken(user: schemas.UserCreate, db: Session = Depends(get_db))
 
 # Sanity check users for development purposes
 @router.get("/{username}")
-def get_user_info(username: str, db: Session = Depends(get_db)):
+def get_user_info(username: str, db: Session = Depends(get_db)):  # pragma: no cover
     db_user = crud.user(db, username=username)
     return db_user

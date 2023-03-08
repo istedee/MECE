@@ -5,7 +5,12 @@ from pydantic import BaseModel
 
 
 class MessageBase(BaseModel):
+    user_id: int
+    recipient_id: int
     message: str
+
+    class Config:
+        orm_mode = True
 
 
 class MessageCreate(MessageBase):
@@ -51,13 +56,6 @@ class ChatRoomJoinUUID(BaseModel):
     room_uuid: str
     api_token: str
 
-class MessageBase(BaseModel):
-    user_id: int
-    recipient_id: int
-    message: str
-
-    class Config:
-        orm_mode = True
 
 class MessageGet(MessageBase):
     pass

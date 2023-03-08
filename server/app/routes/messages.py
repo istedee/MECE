@@ -19,7 +19,10 @@ from main import get_db
 @router.post("/post/", status_code=200, description="Saves message to database")
 def post_message(message: schemas.MessageCreate, db: Session = Depends(get_db)):
     db_user = crud.create_user_message(
-        db, text=message.message, api_token=message.api_token
+        db,
+        text=message.message,
+        api_token=message.api_token,
+        chat_uuid=message.room_uuid,
     )
     if db_user:
         return {"status": "ok"}
