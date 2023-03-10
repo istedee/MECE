@@ -139,7 +139,7 @@ class MyMenu:
         print(resp.json())
         menu.items.append(
             FunctionItem(
-                f"{resp.json()['name']}, {resp.json()['uuid']}",
+                f"{resp.json().get('name')}, {resp.json()['uuid']}",
                 lambda: my_menu.chat_room(stdscr, resp.json()["uuid"]),
             )
         )
