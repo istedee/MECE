@@ -42,6 +42,11 @@ class ChatroomBase(BaseModel):
     class Config:
         orm_mode = True
 
+class ChatRoomGet(BaseModel):
+    api_token: str
+
+    class Config:
+        orm_mode = True
 
 class ChatRoomCreate(ChatroomBase):
     api_token: str
