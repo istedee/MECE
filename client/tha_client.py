@@ -1,5 +1,6 @@
 import curses
 import getpass
+import json
 import time
 import requests
 import threading
@@ -22,7 +23,8 @@ class MyMenu:
 
     def my_handler(self, message):
         self.row = self.row + 1
-        stdscr.addstr(self.row, 2, "broker:{}".format(str(message.get("data"))))
+        splits = str(message.get("data")).split(":")
+        stdscr.addstr(self.row, 2, "{} : {}".format(splits[0], splits[1]))
         stdscr.refresh()
 
     def chat_room(self, stdscr, room):
@@ -68,6 +70,7 @@ class MyMenu:
                 "message": message,
                 "room_uuid": room,
                 "api_token": self.apitoken,
+                "user": self.username,
             }
             if k == curses.KEY_ENTER or k in [10, 13]:
                 response = requests.post(
