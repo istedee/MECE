@@ -68,7 +68,6 @@ class MyMenu:
                 }
             if k == curses.KEY_ENTER or k in [10, 13]:
                 response = requests.post(url="http://127.0.0.1:8000/chatroom/post/", json=payload)
-
                 stdscr.getch()
 
     def login(self):
