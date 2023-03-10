@@ -29,6 +29,8 @@ Running the manual command will cause the FastAPI server to create/use database 
 
 This does not cause any issues, but some data might not be present during development if multiple locations are used. So, in order to use constant environment, using Docker compose is encouraged.
 
+You can also use an external database for the application via adding a .env file to the server folder with the EXTERNAL-IP value set.
+
 ### Using the client
 
 python3 client.py --localhost=True
