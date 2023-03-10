@@ -21,42 +21,39 @@ class MyMenu:
         self.row = 3
 
     def my_handler(self, message):
-        self.row = self.row + 1
-        stdscr.addstr(self.row, 2, "broker:{}".format(str(message.get("data"))))
-        stdscr.refresh()
+        window_height = curses.LINES
+        window_width = curses.COLS
+        division_line =  int(window_height * 0.8)
+        window = stdscr.subpad(division_line-2, window_width -2 , 1, 1)
+        window_lines, window_cols = window.getmaxyx()
+        bottom_line = window_lines - 2
+        window.scrollok(1)
+        window.addstr(bottom_line, 2, "broker:{}".format(str(message.get('data'))))
+        window.scroll(1)
+        window.refresh()
 
     def chat_room(self, stdscr, room):
-        # stdscr.scrollok(1) # enable scrolling
-        # stdscr.timeout(1)  # make 1-millisecond timeouts on `getch`
-        k = 0
-        cursor_x = 0
-        cursor_y = 0
+        k=0
         stdscr.clear()
         stdscr.addstr(1, 2, "Room:{}".format(room))
 
         # Listen messages
-        r = redis.Redis(host="0.0.0.0", decode_responses=True)
+        r = redis.Redis(host='0.0.0.0', decode_responses=True)
         sub = r.pubsub()
         sub.subscribe(**{room: self.my_handler})
         thread = sub.run_in_thread(sleep_time=0.001)
 
-        while k != ord("q"):
+        height, width = stdscr.getmaxyx()
+        chat_box_y = int(height * 0.2)
+        chat_box_start = int(height*0.8)
+        
+        rectangle(stdscr, 0,0, chat_box_start-1, width-1)
 
-            height, width = stdscr.getmaxyx()
-            chat_box_y = int(height * 0.2)
-            chat_box_start = int(height * 0.8)
+        while (k != ord('q')):
 
-            cursor_x = max(0, cursor_x)
-            cursor_x = min(width-1, cursor_x)
-            cursor_y = max(0, cursor_y)
-            cursor_y = min(height-1, cursor_y)
-            statusbarstr = "Press 'ctrl' + 'g' and type 'q' to exit chatroom | Room:{} |".format(room)
-            stdscr.addstr(height-1, 0, statusbarstr)
-            stdscr.addstr(height-1, len(statusbarstr), " " * (width - len(statusbarstr) - 1))
-
-            rectangle(stdscr, 0, 0, chat_box_start - 1, width - 1)
-            editwin = curses.newwin(chat_box_y - 3, width - 3, chat_box_start + 1, 1)
-            rectangle(stdscr, chat_box_start, 0, height - 2, width - 1)
+            self.row = height -1
+            editwin = curses.newwin(chat_box_y-3, width-3, chat_box_start+1, 1)
+            rectangle(stdscr, chat_box_start, 0, height-2, width-1)
             stdscr.refresh()
 
             box = Textbox(editwin)
@@ -67,16 +64,11 @@ class MyMenu:
             payload = {
                 "message": message,
                 "room_uuid": room,
-                "api_token": self.apitoken,
-            }
+                "api_token": self.apitoken
+                }
             if k == curses.KEY_ENTER or k in [10, 13]:
-                response = requests.post(
-                    url="http://127.0.0.1:8000/chatroom/post/", json=payload
-                )
-
+                response = requests.post(url="http://127.0.0.1:8000/chatroom/post/", json=payload)
                 stdscr.getch()
-                # stdscr.scroll(1)
-                self.row = self.row + 1
 
     def login(self):
         username = input("Enter username: ")
