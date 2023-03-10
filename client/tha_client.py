@@ -29,13 +29,11 @@ class MyMenu:
         window_lines, window_cols = window.getmaxyx()
         bottom_line = window_lines - 2
         window.scrollok(1)
-        # window.addstr(bottom_line, 2, "broker:{}".format(str(message.get('data'))))
+        splits = str(message.get("data")).split(":", 1)
+        window.addstr(bottom_line, 2, "{} : {}".format(splits[0], splits[1]))
         window.scroll(1)
         window.refresh()
-# self.row = self.row + 1
-        splits = str(message.get("data")).split(":")
-        window.addstr(self.row, 2, "{} : {}".format(splits[0], splits[1]))
-        window.refresh()
+
     def chat_room(self, stdscr, room):
         k=0
         stdscr.clear()
