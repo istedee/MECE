@@ -38,6 +38,13 @@ def get_messages(db: Session, limit: int = 100):
         db.query(models.Message).order_by(models.Message.id.desc()).limit(limit).all()
     )
 
+def get_rooms(db: Session, api_token: str):
+    user = verify_user(db, api_token)
+    return (
+        db.query(models.ChatRoom).join(models.Membership)
+        .filter(models.Membership.member_id == user.id)
+        .all()
+    )
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = user.password
