@@ -23,7 +23,7 @@ class MyMenu:
 
     def my_handler(self, message):
         self.row = self.row + 1
-        splits = str(message.get("data")).split(":")
+        splits = str(message.get("data")).split(":", 1)
         stdscr.addstr(self.row, 2, "{} : {}".format(splits[0], splits[1]))
         stdscr.refresh()
 
