@@ -1,5 +1,6 @@
 import curses
 import getpass
+import json
 import time
 import requests
 import threading
@@ -28,7 +29,8 @@ class MyMenu:
         window_lines, window_cols = window.getmaxyx()
         bottom_line = window_lines - 2
         window.scrollok(1)
-        window.addstr(bottom_line, 2, "broker:{}".format(str(message.get('data'))))
+        splits = str(message.get("data")).split(":", 1)
+        window.addstr(bottom_line, 2, "{} : {}".format(splits[0], splits[1]))
         window.scroll(1)
         window.refresh()
 
@@ -64,8 +66,9 @@ class MyMenu:
             payload = {
                 "message": message,
                 "room_uuid": room,
-                "api_token": self.apitoken
-                }
+                "api_token": self.apitoken,
+                "user": self.username,
+            }
             if k == curses.KEY_ENTER or k in [10, 13]:
                 response = requests.post(url="http://127.0.0.1:8000/chatroom/post/", json=payload)
                 stdscr.getch()

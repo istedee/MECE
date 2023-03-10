@@ -11,6 +11,7 @@ class MessageBase(BaseModel):
 class MessageCreate(MessageBase):
     api_token: str
     room_uuid: str
+    user: str
 
 
 class Message(MessageBase):

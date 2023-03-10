@@ -33,7 +33,7 @@ def post_message(message: schemas.MessageCreate, db: Session = Depends(get_db)):
     if db_user:
         print(message)
         i = 1
-        redis_client.publish(message.room_uuid, message.message)
+        redis_client.publish(message.room_uuid, str(f"{message.user}:{message.message}"))
         # producer.send(message.room_uuid, message.message)
         return {"status": "ok"}
     else:
