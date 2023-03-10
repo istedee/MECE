@@ -12,7 +12,7 @@ def producer():
         time.sleep(1)
 
 def consumer():
-    r = redis.Redis(host='0.0.0.0')
+    r = redis.Redis()
     while True:
         # val = r.blpop('queue')
         sub = r.pubsub()
