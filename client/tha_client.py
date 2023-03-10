@@ -18,6 +18,7 @@ class MyMenu:
     def __init__(self):
         self.apitoken = None
         self.username = None
+        self.chat = None
         self.rooms = []
         self.row = 3
 
@@ -70,7 +71,8 @@ class MyMenu:
                 "user": self.username,
             }
             if k == curses.KEY_ENTER or k in [10, 13]:
-                response = requests.post(url="http://127.0.0.1:8000/chatroom/post/", json=payload)
+                #response = requests.post(url="http://127.0.0.1:8000/chatroom/post/", json=payload)
+                response = self.chat.post_message(message, room, self.apitoken, self.username)
                 stdscr.getch()
 
     def login(self):
@@ -78,11 +80,12 @@ class MyMenu:
         password = getpass.getpass("Enter password: ")
         msg = {"username": username, "password": password}
         try:
-            response = requests.post(
-                "http://127.0.0.1:8000/users/check-api-token/", json=msg, timeout=20
-            )
+            #response = requests.post(
+            #    "http://127.0.0.1:8000/users/check-api-token/", json=msg, timeout=20
+            #)
+            response, result = self.chat.check_user(username, password)
             if response.status_code != 200:
-                print("login failed")
+                print(result)
                 time.sleep(1)
                 return
         except TimeoutError:
@@ -93,11 +96,12 @@ class MyMenu:
         time.sleep(1)
         self.username = username
         self.apitoken = response.json()["api_token"]
-        resp = requests.get(
-            "http://127.0.0.1:8000/chatroom/rooms/",
-            json={"api_token": self.apitoken},
-            timeout=20,
-        )
+        #resp = requests.get(
+        #    "http://127.0.0.1:8000/chatroom/rooms/",
+        #    json={"api_token": self.apitoken},
+        #    timeout=20,
+        #)
+        resp = self.chat.get_chat_rooms(self.apitoken)
         rooms = [[i["name"], i["uuid"]] for i in resp.json()]
         self.rooms.clear()
         self.rooms.extend(rooms)
@@ -115,9 +119,10 @@ class MyMenu:
         password = getpass.getpass("Enter your desired password: ")
         msg = {"username": username, "password": password}
         try:
-            response = requests.post(
-                "http://127.0.0.1:8000/users/register/", json=msg, timeout=20
-            )
+           # response = requests.post(
+           #     "http://127.0.0.1:8000/users/register/", json=msg, timeout=20
+           # )
+            response, detail = self.chat.register_user(username, password)
             if response.status_code != 200:
                 return
         except Exception:
@@ -136,11 +141,12 @@ class MyMenu:
             return
         print("Joining chatroom...")
         room_uuid = input("Give me a room_uuid: ")
-        resp = requests.post(
-            "http://127.0.0.1:8000/chatroom/join/",
-            json={"api_token": self.apitoken, "room_uuid": room_uuid},
-            timeout=20,
-        )
+        #resp = requests.post(
+        #    "http://127.0.0.1:8000/chatroom/join/",
+        #    json={"api_token": self.apitoken, "room_uuid": room_uuid},
+        #    timeout=20,
+        #)
+        resp, detail = self.chat.join_chat_room(room_uuid, self.apitoken)
         print(resp.json())
         if resp.status_code == 200:
             menu.items.append(
@@ -158,11 +164,12 @@ class MyMenu:
             time.sleep(1)
             return
         name = input("Enter server name: ")
-        msg = {"name": name, "api_token": self.apitoken}
+        # msg = {"name": name, "api_token": self.apitoken}
         try:
-            response = requests.post(
-                "http://127.0.0.1:8000/chatroom/create/", json=msg, timeout=20
-            )
+            #response = requests.post(
+            #    "http://127.0.0.1:8000/chatroom/create/", json=msg, timeout=20
+            #)
+            response, result = self.chat.create_chat_room(name, self.apitoken)
             if response.status_code != 200:
                 return
             if response.json().get("status_code") == 409:
@@ -172,16 +179,18 @@ class MyMenu:
             return
         print("chatroom created!")
         room_uuid = response.json()["uuid"]
-        requests.post(
-            "http://127.0.0.1:8000/chatroom/join/",
-            json={"api_token": self.apitoken, "room_uuid": room_uuid},
-            timeout=20,
-        )
-        resp = requests.get(
-            "http://127.0.0.1:8000/chatroom/rooms/",
-            json={"api_token": self.apitoken},
-            timeout=20,
-        )
+        #requests.post(
+        #    "http://127.0.0.1:8000/chatroom/join/",
+        #    json={"api_token": self.apitoken, "room_uuid": room_uuid},
+        #    timeout=20,
+        #)
+        self.chat.join_chat_room(room_uuid, self.apitoken)
+        #resp = requests.get(
+        #    "http://127.0.0.1:8000/chatroom/rooms/",
+        #    json={"api_token": self.apitoken},
+        #    timeout=20,
+        #)
+        resp = self.chat.get_chat_rooms(self.apitoken)
         rooms = [[i["name"], i["uuid"]] for i in resp.json()]
         self.rooms.clear()
         self.rooms.extend(rooms)
@@ -199,24 +208,29 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Run a chat client")
 
     parser.add_argument(
-        "--localhost",
+        "--rahtiapp",
         type=bool,
-        help="if you want to use localhost: python3 client.py --localhost=True",
+        help="if you want to use rahtiapp: python3 client.py --rahtiapp=True",
     )
 
     return parser.parse_args()
 
 
 args = parse_args()
+try:
+    menu = CursesMenu("Main Menu", "Select an option:")
+    my_menu = MyMenu()
+    my_menu.chat = client_chat.ClientChat(args.rahtiapp)
+    # item1 = MenuItem(my_menu.rooms, menu)
+    menu.items.append(FunctionItem("Login", my_menu.login))
+    menu.items.append(FunctionItem("Register", my_menu.register))
+    menu.items.append(FunctionItem("Join Chatroom", my_menu.join_chatroom))
+    menu.items.append(FunctionItem("Create Chatroom", my_menu.create_chatroom))
+    # menu.items.append(item1)
 
-menu = CursesMenu("Main Menu", "Select an option:")
-my_menu = MyMenu()
-# item1 = MenuItem(my_menu.rooms, menu)
-menu.items.append(FunctionItem("Login", my_menu.login))
-menu.items.append(FunctionItem("Register", my_menu.register))
-menu.items.append(FunctionItem("Join Chatroom", my_menu.join_chatroom))
-menu.items.append(FunctionItem("Create Chatroom", my_menu.create_chatroom))
-# menu.items.append(item1)
 
-
-menu.show()
+    menu.show()
+except KeyboardInterrupt as e:
+    pass
+except:
+    raise
