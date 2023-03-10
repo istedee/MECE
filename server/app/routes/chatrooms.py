@@ -12,7 +12,7 @@ router = APIRouter(
     },
 )
 
-from main import get_db, producer
+from main import get_db, redis_client#, producer
 
 
 @router.post("/post/", status_code=200, description="Post chatroom messages")
@@ -35,9 +35,12 @@ def post_message(message: schemas.MessageCreate, db: Session = Depends(get_db)):
         api_token=message.api_token,
         chat_uuid=message.room_uuid,
     )
+    db_user = True
     if db_user:
         print(message)
-        producer.send(message.room_uuid, message.message)
+        i = 1
+        redis_client.publish('queue', message.message)
+        # producer.send(message.room_uuid, message.message)
         return {"status": "ok"}
     else:
         raise HTTPException(status_code=403, detail="API token not valid!")
