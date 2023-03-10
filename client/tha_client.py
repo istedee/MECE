@@ -40,6 +40,9 @@ class MyMenu:
         rooms = [[i["name"], i["uuid"]] for i in resp.json()]
         self.rooms.clear()
         self.rooms.extend(rooms)
+        menu.items.append(MenuItem("Your rooms:"))
+        for room in resp.json():
+            menu.items.append(FunctionItem(room["name"], my_menu.create_chatroom))
 
     def register(self):
         username = input("Enter your desired username: ")
@@ -108,11 +111,11 @@ class MyMenu:
 
 menu = CursesMenu("Main Menu", "Select an option:")
 my_menu = MyMenu()
-item1 = MenuItem(my_menu.rooms, menu)
+# item1 = MenuItem(my_menu.rooms, menu)
 menu.items.append(FunctionItem("Login", my_menu.login))
 menu.items.append(FunctionItem("Register", my_menu.register))
 menu.items.append(FunctionItem("Join Chatroom", my_menu.join_chatroom))
 menu.items.append(FunctionItem("Create Chatroom", my_menu.create_chatroom))
-menu.items.append(item1)
+# menu.items.append(item1)
 
 menu.show()
