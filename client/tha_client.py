@@ -29,6 +29,8 @@ class MyMenu:
         # stdscr.scrollok(1) # enable scrolling
         # stdscr.timeout(1)  # make 1-millisecond timeouts on `getch`
         k = 0
+        cursor_x = 0
+        cursor_y = 0
         stdscr.clear()
         stdscr.addstr(1, 2, "Room:{}".format(room))
 
@@ -43,6 +45,14 @@ class MyMenu:
             height, width = stdscr.getmaxyx()
             chat_box_y = int(height * 0.2)
             chat_box_start = int(height * 0.8)
+
+            cursor_x = max(0, cursor_x)
+            cursor_x = min(width-1, cursor_x)
+            cursor_y = max(0, cursor_y)
+            cursor_y = min(height-1, cursor_y)
+            statusbarstr = "Press 'ctrl' + 'g' and type 'q' to exit chatroom | Room:{} |".format(room)
+            stdscr.addstr(height-1, 0, statusbarstr)
+            stdscr.addstr(height-1, len(statusbarstr), " " * (width - len(statusbarstr) - 1))
 
             rectangle(stdscr, 0, 0, chat_box_start - 1, width - 1)
             editwin = curses.newwin(chat_box_y - 3, width - 3, chat_box_start + 1, 1)
@@ -137,12 +147,13 @@ class MyMenu:
             timeout=20,
         )
         print(resp.json())
-        menu.items.append(
-            FunctionItem(
-                f"{resp.json().get('name')}, {resp.json()['uuid']}",
-                lambda: my_menu.chat_room(stdscr, resp.json()["uuid"]),
+        if resp.status_code == 200:
+            menu.items.append(
+                FunctionItem(
+                    f"{resp.json().get('name')}, {resp.json().get('uuid')}",
+                    lambda: my_menu.chat_room(stdscr, resp.json()["uuid"]),
+                )
             )
-        )
         return
 
     def create_chatroom(self):
