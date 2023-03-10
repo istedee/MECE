@@ -42,7 +42,7 @@ else:
     # )
 
 # Redis config:
-redis_client = redis.Redis(host=os.environ.get("REDIS_HOST"), port=os.environ.get("REDIS_PORT"))
+redis_client = redis.Redis(host=os.environ.get("REDIS_HOST"), port=os.environ.get("REDIS_PORT"), password=os.environ.get("REDIS_PASSWORD"))
 
 models.Base.metadata.create_all(bind=engine)
 
