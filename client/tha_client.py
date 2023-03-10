@@ -2,8 +2,14 @@ import curses
 import getpass
 import time
 import requests
+import threading
+import argparse
+import redis
+import client_chat
+from curses.textpad import Textbox, rectangle
 from cursesmenu import CursesMenu
 from cursesmenu.items import FunctionItem, MenuItem
+stdscr = curses.initscr()
 
 
 class MyMenu:
@@ -11,6 +17,51 @@ class MyMenu:
         self.apitoken = None
         self.username = None
         self.rooms = []
+        self.row = 3
+    
+    def my_handler(self, message):
+        stdscr.addstr(self.row, 2, "broker:{}".format(str(message.get('data'))))
+
+    def chat_room(self, stdscr, room):
+        #stdscr.scrollok(1) # enable scrolling
+        #stdscr.timeout(1)  # make 1-millisecond timeouts on `getch`
+        k=0
+        stdscr.clear()
+        stdscr.addstr(1, 2, "Room:{}".format(room))
+
+        # Listen messages
+        r = redis.Redis(host='0.0.0.0', decode_responses=True)
+        sub = r.pubsub()
+        sub.subscribe(**{room: self.my_handler})
+        thread = sub.run_in_thread(sleep_time=0.001)
+
+        while (k != ord('q')):
+
+            height, width = stdscr.getmaxyx()
+            chat_box_y = int(height * 0.2)
+            chat_box_start = int(height*0.8)
+
+            rectangle(stdscr, 0,0, chat_box_start-1, width-1)
+            editwin = curses.newwin(chat_box_y-3, width-3, chat_box_start+1, 1)
+            rectangle(stdscr, chat_box_start, 0, height-2, width-1)
+            stdscr.refresh()
+
+            box = Textbox(editwin)
+
+            box.edit()
+            message = box.gather()
+            k = stdscr.getch()
+            payload = {
+                "message": message,
+                "room_uuid": room,
+                "api_token": self.apitoken
+                }
+            if k == curses.KEY_ENTER or k in [10, 13]:
+                response = requests.post(url="http://127.0.0.1:8000/chatroom/post/", json=payload)
+
+                stdscr.getch()
+                #stdscr.scroll(1)
+                self.row = self.row +1
 
     def login(self):
         username = input("Enter username: ")
@@ -42,7 +93,7 @@ class MyMenu:
         self.rooms.extend(rooms)
         menu.items.append(MenuItem("Your rooms:"))
         for room in resp.json():
-            menu.items.append(FunctionItem(room["name"], my_menu.create_chatroom))
+            menu.items.append(FunctionItem(room["name"], my_menu.chat_room(stdscr, room["uuid"])))
 
     def register(self):
         username = input("Enter your desired username: ")
@@ -108,6 +159,16 @@ class MyMenu:
         print("room created!")
         time.sleep(2)
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Run a chat client')
+
+    parser.add_argument('--localhost',
+                        type=bool,
+                        help='if you want to use localhost: python3 client.py --localhost=True')
+
+    return parser.parse_args()
+
+args = parse_args()
 
 menu = CursesMenu("Main Menu", "Select an option:")
 my_menu = MyMenu()
@@ -117,5 +178,6 @@ menu.items.append(FunctionItem("Register", my_menu.register))
 menu.items.append(FunctionItem("Join Chatroom", my_menu.join_chatroom))
 menu.items.append(FunctionItem("Create Chatroom", my_menu.create_chatroom))
 # menu.items.append(item1)
+
 
 menu.show()
