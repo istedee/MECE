@@ -36,6 +36,8 @@ class MyMenu:
 
     def chat_room(self, stdscr, room):
         k=0
+        cursor_x = 0
+        cursor_y = 0
         stdscr.clear()
         stdscr.addstr(1, 2, "Room:{}".format(room))
 
@@ -48,6 +50,14 @@ class MyMenu:
         height, width = stdscr.getmaxyx()
         chat_box_y = int(height * 0.2)
         chat_box_start = int(height*0.8)
+
+        cursor_x = max(0, cursor_x)
+        cursor_x = min(width-1, cursor_x)
+        cursor_y = max(0, cursor_y)
+        cursor_y = min(height-1, cursor_y)
+        statusbarstr = "Press 'ctrl' + 'g' and type 'q' to exit chatroom | Room:{} |".format(room)
+        stdscr.addstr(height-1, 0, statusbarstr)
+        stdscr.addstr(height-1, len(statusbarstr), " " * (width - len(statusbarstr) - 1))
         
         rectangle(stdscr, 0,0, chat_box_start-1, width-1)
 
@@ -102,11 +112,12 @@ class MyMenu:
         self.rooms.clear()
         self.rooms.extend(rooms)
         menu.items.append(MenuItem("Your rooms:"))
-        for i in resp.json():
+        for room in rooms:
             menu.items.append(
                 FunctionItem(
-                    f"{i['name']}, {i['uuid']}",
-                    lambda: my_menu.chat_room(stdscr, i["uuid"]),
+                    f"{room[0], room[1]}",
+                    my_menu.chat_room,
+                    args=(stdscr, room[1])
                 )
             )
 
@@ -146,9 +157,45 @@ class MyMenu:
             menu.items.append(
                 FunctionItem(
                     f"{resp.json().get('name')}, {resp.json().get('uuid')}",
-                    lambda: my_menu.chat_room(stdscr, resp.json()["uuid"]),
+                    my_menu.chat_room,
+                    args=(stdscr, resp.json()["uuid"]),
                 )
             )
+        return
+    
+    def leave_chatroom(self):
+        # Code for joining an existing chatroom goes here
+        if self.username is None:
+            print("login first!")
+            time.sleep(1)
+            return
+        print("Leaving chatroom...")
+        room_uuid = input("Give me a room_uuid: ")
+        resp = requests.post(
+            "http://127.0.0.1:8000/chatroom/leave/",
+            json={"api_token": self.apitoken, "room_uuid": room_uuid},
+            timeout=20,
+        )
+        menu.items.clear()
+        stdscr.refresh()
+        create_main_menu()
+        resp = requests.get(
+            "http://127.0.0.1:8000/chatroom/rooms/",
+            json={"api_token": self.apitoken},
+            timeout=20,
+        )
+        rooms = [[i["name"], i["uuid"]] for i in resp.json()]
+        self.rooms.clear()
+        self.rooms.extend(rooms)
+        for room in rooms:
+            menu.items.append(
+                FunctionItem(
+                    f"{room[0], room[1]}",
+                    my_menu.chat_room,
+                    args=(stdscr, room[1])
+                )
+            )
+        menu.show()
         return
 
     def create_chatroom(self):
@@ -177,6 +224,9 @@ class MyMenu:
             json={"api_token": self.apitoken, "room_uuid": room_uuid},
             timeout=20,
         )
+        menu.items.clear()
+        stdscr.refresh()
+        create_main_menu()
         resp = requests.get(
             "http://127.0.0.1:8000/chatroom/rooms/",
             json={"api_token": self.apitoken},
@@ -185,14 +235,16 @@ class MyMenu:
         rooms = [[i["name"], i["uuid"]] for i in resp.json()]
         self.rooms.clear()
         self.rooms.extend(rooms)
-        menu.items.append(
-            FunctionItem(
-                f"{response.json()['name'], response.json()['uuid']}",
-                lambda: my_menu.chat_room(stdscr, response.json()["uuid"]),
+        for room in rooms:
+            menu.items.append(
+                FunctionItem(
+                    f"{room[0], room[1]}",
+                    my_menu.chat_room,
+                    args=(stdscr, room[1])
+                )
             )
-        )
-        print("room created!")
-        time.sleep(2)
+        menu.show()
+        return
 
 
 def parse_args():
@@ -206,17 +258,18 @@ def parse_args():
 
     return parser.parse_args()
 
+menu = CursesMenu("Main Menu", "Select an option:")
+my_menu = MyMenu()
+
+def create_main_menu():
+    menu.items.append(FunctionItem("Login", my_menu.login))
+    menu.items.append(FunctionItem("Register", my_menu.register))
+    menu.items.append(FunctionItem("Join Chatroom", my_menu.join_chatroom))
+    menu.items.append(FunctionItem("Create Chatroom", my_menu.create_chatroom))
+    menu.items.append(FunctionItem("Leave Chatroom", my_menu.leave_chatroom))
 
 args = parse_args()
 
-menu = CursesMenu("Main Menu", "Select an option:")
-my_menu = MyMenu()
-# item1 = MenuItem(my_menu.rooms, menu)
-menu.items.append(FunctionItem("Login", my_menu.login))
-menu.items.append(FunctionItem("Register", my_menu.register))
-menu.items.append(FunctionItem("Join Chatroom", my_menu.join_chatroom))
-menu.items.append(FunctionItem("Create Chatroom", my_menu.create_chatroom))
-# menu.items.append(item1)
-
+create_main_menu()
 
 menu.show()
