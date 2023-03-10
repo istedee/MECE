@@ -21,7 +21,9 @@ class MyMenu:
         self.row = 3
 
     def my_handler(self, message):
+        self.row = self.row + 1
         stdscr.addstr(self.row, 2, "broker:{}".format(str(message.get("data"))))
+        stdscr.refresh()
 
     def chat_room(self, stdscr, room):
         # stdscr.scrollok(1) # enable scrolling
@@ -137,10 +139,11 @@ class MyMenu:
         print(resp.json())
         menu.items.append(
             FunctionItem(
-                resp.json()["uuid"],
+                f"{resp.json()['name']}, {resp.json()['uuid']}",
                 lambda: my_menu.chat_room(stdscr, resp.json()["uuid"]),
             )
         )
+        return
 
     def create_chatroom(self):
         # Code for creating a new chatroom goes here
@@ -156,13 +159,12 @@ class MyMenu:
             )
             if response.status_code != 200:
                 return
-            elif response.json().get("status_code") == 409:
+            if response.json().get("status_code") == 409:
                 return
         except TimeoutError:
             print("Are you connected?")
             return
         print("chatroom created!")
-        print(response.json())
         room_uuid = response.json()["uuid"]
         requests.post(
             "http://127.0.0.1:8000/chatroom/join/",

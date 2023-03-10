@@ -38,13 +38,16 @@ def get_messages(db: Session, limit: int = 100):
         db.query(models.Message).order_by(models.Message.id.desc()).limit(limit).all()
     )
 
+
 def get_rooms(db: Session, api_token: str):
     user = verify_user(db, api_token)
     return (
-        db.query(models.ChatRoom).join(models.Membership)
+        db.query(models.ChatRoom)
+        .join(models.Membership)
         .filter(models.Membership.member_id == user.id)
         .all()
     )
+
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = user.password
@@ -79,7 +82,9 @@ def create_user_message(db: Session, text: str, api_token: str, chat_uuid: str):
     time = generate_timestamp()
     chat = get_chatroom_uuid(db, chat_uuid)
     if user and chat:
-        db_item = models.Message(message=text, owner_id=user.id, timestamp=time, chatroom_uuid=chat_uuid)
+        db_item = models.Message(
+            message=text, owner_id=user.id, timestamp=time, chatroom_uuid=chat_uuid
+        )
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
@@ -98,6 +103,7 @@ def get_chatroom_uuid(db: Session, chatroom_id: str):
         db.query(models.ChatRoom.id).filter(models.ChatRoom.uuid == chatroom_id).first()
     )
 
+
 def verify_user_in_chatroom(db: Session, chatroom_uuid: str, api_token: str):
     """Verify that the user belongs to the chatroom by api_token"""
     user = verify_user(db, api_token)
@@ -108,6 +114,7 @@ def verify_user_in_chatroom(db: Session, chatroom_uuid: str, api_token: str):
         .filter(models.Membership.chatroom_id == chatroom.id)
         .first()
     )
+
 
 def create_chatroom(db: Session, api_token: str, name: str):
     """Create a new chatroom"""
@@ -145,7 +152,11 @@ def join_chatroom(db: Session, member_id: int, chatroom_id: int):
         db.add(membership)
         db.commit()
         db.refresh(membership)
-        return membership
+        return (
+            db.query(models.ChatRoom.name, models.ChatRoom.uuid)
+            .filter(models.ChatRoom.id == chatroom_id)
+            .first()
+        )
     else:
         return None
 
