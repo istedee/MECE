@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ "$EUID" -ne 0 ]
+  then echo "Please run this script as root"
+  echo "This is because docker requires root to function"
+  exit
+fi
+
+
 echo
 echo "Starting up Docker container for curses client"
 
