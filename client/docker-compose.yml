@@ -1,0 +1,11 @@
+version: '3.9'
+services:
+  curses:
+    container_name: curses-client
+    build: .
+    network_mode: "host"
+    environment:
+           - TERM=xterm-256color
+    tty: true
+    stdin_open: true
+    command: bash
