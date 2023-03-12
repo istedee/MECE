@@ -22,4 +22,4 @@ echo
 
 sleep 2
 
-sudo docker exec -it curses-client python3 tha_client.py
+sudo docker exec -it curses-client python3 client.py
