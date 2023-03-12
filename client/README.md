@@ -1,6 +1,4 @@
-This is readme-file for the client.
-
-### HOW TO USE THE CLIENT
+## HOW TO USE THE CLIENT
 
 First off you need to register a user. Select the `register` button and create a user. You should not be able to create duplicates.
 
