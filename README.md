@@ -1,6 +1,8 @@
 # MECE [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 Distributed systems project 2023
 
+[Guide for operating the client](client/README.md)
+
 ## Docker deployment
 
 Have both
@@ -93,6 +95,8 @@ DISCLAIMER: your mileage may vary
 ### Testing
 
 You can manually test the application with Pytest
+
+Run testing commands in the server directory.
 
 Run command:
 
