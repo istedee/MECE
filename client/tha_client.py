@@ -21,6 +21,7 @@ class MyMenu:
         self.chat = None
         self.rooms = []
         self.row = 3
+        self.remote = None
 
     def my_handler(self, message):
         window_height = curses.LINES
@@ -43,7 +44,10 @@ class MyMenu:
         stdscr.addstr(1, 2, "Room:{}".format(room))
 
         # Listen messages
-        r = redis.Redis(host='0.0.0.0', decode_responses=True)
+        if self.remote:
+            r = redis.Redis(host='redis-chatexperience.rahtiapp.fi', decode_responses=True, password="123")
+        else:
+            r = redis.Redis(decode_responses=True)
         sub = r.pubsub()
         sub.subscribe(**{room: self.my_handler})
         thread = sub.run_in_thread(sleep_time=0.001)
@@ -81,7 +85,6 @@ class MyMenu:
                 "user": self.username,
             }
             if k == curses.KEY_ENTER or k in [10, 13]:
-                #response = requests.post(url="http://127.0.0.1:8000/chatroom/post/", json=payload)
                 response = self.chat.post_message(message, room, self.apitoken, self.username)
                 stdscr.getch()
 
@@ -90,9 +93,6 @@ class MyMenu:
         password = getpass.getpass("Enter password: ")
         msg = {"username": username, "password": password}
         try:
-            #response = requests.post(
-            #    "http://127.0.0.1:8000/users/check-api-token/", json=msg, timeout=20
-            #)
             response, result = self.chat.check_user(username, password)
             if response.status_code != 200:
                 print(result)
@@ -101,16 +101,10 @@ class MyMenu:
         except TimeoutError:
             print("Are you connected?")
             return
-        # Code for adding new user to the system goes here
         print(f"Welcome, {username}!")
         time.sleep(1)
         self.username = username
         self.apitoken = response.json()["api_token"]
-        #resp = requests.get(
-        #    "http://127.0.0.1:8000/chatroom/rooms/",
-        #    json={"api_token": self.apitoken},
-        #    timeout=20,
-        #)
         resp = self.chat.get_chat_rooms(self.apitoken)
         rooms = [[i["name"], i["uuid"]] for i in resp.json()]
         self.rooms.clear()
@@ -130,9 +124,6 @@ class MyMenu:
         password = getpass.getpass("Enter your desired password: ")
         msg = {"username": username, "password": password}
         try:
-           # response = requests.post(
-           #     "http://127.0.0.1:8000/users/register/", json=msg, timeout=20
-           # )
             response, detail = self.chat.register_user(username, password)
             if response.status_code != 200:
                 return
@@ -140,23 +131,16 @@ class MyMenu:
             print("Error!")
             time.sleep(1)
             return
-        # Code for adding new user to the system goes here
         print(f"User {username} registered successfully!")
         time.sleep(1)
 
     def join_chatroom(self):
-        # Code for joining an existing chatroom goes here
         if self.username is None:
             print("login first!")
             time.sleep(1)
             return
         print("Joining chatroom...")
         room_uuid = input("Give me a room_uuid: ")
-        #resp = requests.post(
-        #    "http://127.0.0.1:8000/chatroom/join/",
-        #    json={"api_token": self.apitoken, "room_uuid": room_uuid},
-        #    timeout=20,
-        #)
         resp, detail = self.chat.join_chat_room(room_uuid, self.apitoken)
         print(resp.json())
         if resp.status_code == 200:
@@ -170,26 +154,17 @@ class MyMenu:
         return
     
     def leave_chatroom(self):
-        # Code for joining an existing chatroom goes here
         if self.username is None:
             print("login first!")
             time.sleep(1)
             return
         print("Leaving chatroom...")
         room_uuid = input("Give me a room_uuid: ")
-        resp = requests.post(
-            "http://127.0.0.1:8000/chatroom/leave/",
-            json={"api_token": self.apitoken, "room_uuid": room_uuid},
-            timeout=20,
-        )
+        resp = self.chat.leave_chat_room(room_uuid, self.apitoken)
         menu.items.clear()
         stdscr.refresh()
         create_main_menu()
-        resp = requests.get(
-            "http://127.0.0.1:8000/chatroom/rooms/",
-            json={"api_token": self.apitoken},
-            timeout=20,
-        )
+        resp = self.chat.get_chat_rooms(self.apitoken)
         rooms = [[i["name"], i["uuid"]] for i in resp.json()]
         self.rooms.clear()
         self.rooms.extend(rooms)
@@ -205,17 +180,12 @@ class MyMenu:
         return
 
     def create_chatroom(self):
-        # Code for creating a new chatroom goes here
         if self.username is None:
             print("login first!")
             time.sleep(1)
             return
         name = input("Enter server name: ")
-        # msg = {"name": name, "api_token": self.apitoken}
         try:
-            #response = requests.post(
-            #    "http://127.0.0.1:8000/chatroom/create/", json=msg, timeout=20
-            #)
             response, result = self.chat.create_chat_room(name, self.apitoken)
             if response.status_code != 200:
                 return
@@ -226,21 +196,12 @@ class MyMenu:
             return
         print("chatroom created!")
         room_uuid = response.json()["uuid"]
-        
-        #requests.post(
-        #    "http://127.0.0.1:8000/chatroom/join/",
-        #    json={"api_token": self.apitoken, "room_uuid": room_uuid},
-        #    timeout=20,
-        #)
+
         self.chat.join_chat_room(room_uuid, self.apitoken)
         menu.items.clear()
         stdscr.refresh()
         create_main_menu()
-        #resp = requests.get(
-        #    "http://127.0.0.1:8000/chatroom/rooms/",
-        #    json={"api_token": self.apitoken},
-        #    timeout=20,
-        #)
+
         resp = self.chat.get_chat_rooms(self.apitoken)
         rooms = [[i["name"], i["uuid"]] for i in resp.json()]
         self.rooms.clear()
@@ -279,6 +240,9 @@ def create_main_menu():
     menu.items.append(FunctionItem("Leave Chatroom", my_menu.leave_chatroom))
 
 args = parse_args()
+
+if args.rahtiapp is not None:
+    my_menu.remote = True
 
 create_main_menu()
 try:
