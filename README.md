@@ -93,6 +93,7 @@ DISCLAIMER: your mileage may vary
 ### Testing
 
 You can manually test the application with Pytest
+Run testing commands in the server directory.
 
 Run command:
 
